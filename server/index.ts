@@ -60,11 +60,21 @@ if (process.env.NODE_ENV === 'production') {
   });
 } else {
   // Development mode - let Vite handle the frontend
-  app.get('/', (req, res) => {
-    res.json({ 
-      message: 'API server running in development mode',
-      frontend: 'Served by Vite dev server'
-    });
+  // In development, all non-API routes should return a helpful message
+  app.get('*', (req, res) => {
+    if (req.path.startsWith('/api')) {
+      res.status(404).json({ error: 'API endpoint not found' });
+    } else {
+      res.json({ 
+        message: 'API server running in development mode',
+        frontend: 'Please run the Vite dev server separately',
+        availableEndpoints: [
+          'GET /api/health',
+          'GET /api/products', 
+          'GET /api/transactions'
+        ]
+      });
+    }
   });
 }
 
