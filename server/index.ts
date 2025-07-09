@@ -2,6 +2,7 @@ import express from 'express';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import { createServer } from 'http';
+import apiRoutes from './routes.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -27,28 +28,7 @@ app.use((req, res, next) => {
 });
 
 // API routes
-app.get('/api/health', (req, res) => {
-  res.json({ 
-    status: 'ok', 
-    timestamp: new Date().toISOString(),
-    environment: process.env.NODE_ENV || 'development'
-  });
-});
-
-// Sample API endpoints for the financial app
-app.get('/api/products', (req, res) => {
-  res.json([
-    { id: 1, name: 'Product 1', price: 100, stock: 50 },
-    { id: 2, name: 'Product 2', price: 200, stock: 30 }
-  ]);
-});
-
-app.get('/api/transactions', (req, res) => {
-  res.json([
-    { id: 1, type: 'income', amount: 1000, description: 'Sale', date: new Date().toISOString() },
-    { id: 2, type: 'expense', amount: 500, description: 'Purchase', date: new Date().toISOString() }
-  ]);
-});
+app.use('/api', apiRoutes);
 
 // Serve static files from the client build directory
 if (process.env.NODE_ENV === 'production') {
@@ -60,18 +40,21 @@ if (process.env.NODE_ENV === 'production') {
   });
 } else {
   // Development mode - let Vite handle the frontend
-  // In development, all non-API routes should return a helpful message
   app.get('*', (req, res) => {
     if (req.path.startsWith('/api')) {
       res.status(404).json({ error: 'API endpoint not found' });
     } else {
       res.json({ 
         message: 'API server running in development mode',
-        frontend: 'Please run the Vite dev server separately',
+        frontend: 'Frontend is served by Vite dev server (usually port 5173)',
+        backend: `API server running on port ${PORT}`,
         availableEndpoints: [
           'GET /api/health',
           'GET /api/products', 
-          'GET /api/transactions'
+          'POST /api/products',
+          'GET /api/transactions',
+          'POST /api/transactions',
+          'GET /api/dashboard/stats'
         ]
       });
     }
@@ -86,7 +69,8 @@ server.listen(PORT, '0.0.0.0', () => {
   console.log(`🔗 Health check: http://localhost:${PORT}/api/health`);
   
   if (process.env.NODE_ENV !== 'production') {
-    console.log(`⚡ Frontend will be served by Vite dev server`);
+    console.log(`⚡ Frontend will be served by Vite dev server (usually port 5173)`);
+    console.log(`🔄 Both servers should start concurrently`);
   }
 });
 
